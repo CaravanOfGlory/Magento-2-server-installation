@@ -1,5 +1,5 @@
 # Magento 2 installation - Magenx e-commerce webstack  
-## Debian 11 12 | Ubuntu 20.04 22.04
+## Debian 12 13 | Ubuntu 22.04 24.04
 
 ## Production ready + AWS Graviton2 ARM support
 
@@ -84,7 +84,7 @@ Complete linux stack including:
   
   
 ## 🔡 Environment / Magento mode:  
-You can select the type of environment and Magento mode respectively. By installing 3 environments on one server at the same time - developer, staging and production, or one type only if you use simple development or even different servers per environment. The script configures users, folders, and all settings for a given environment.
+The script configures webstack, users, folders, and all settings for a given environment. Productions mode. Read-only. Linux ACL
   
   
 ## 📄 Get config:  
@@ -100,26 +100,59 @@ Once up and running, set up SSL with certbot (already installed):
 and uncomment the lines for SSL in:  
 - /etc/nginx/nginx.conf
 - /etc/nginx/sites-available/{DOMAIN_NAME}.conf
-- /etc/nginx/conf_m2/varnish_proxy.conf
 
   
 ## :hammer_and_wrench: DevOps idea:
-You have the opportunity to install a new Magento 2, and it is best to do this in a developer environment. Push the code to your Github repository and from there develop and deploy to production and staging environment using Github Actions.  
+You have the opportunity to install a new Magento 2, and it is best to do this in a staging environment. Push the code to your Github repository and from there develop and deploy to production and staging environment using Github Actions.  
 This is the safest and most productive approach.
 There are few configuration files available for Github Actions [paid extra] deployments: 
- - `~/deploy.sh` - basic script to catch Github Actions deployment input and run git and magento commands
+ - `/opt/deploy/deploy.py` - basic script to catch Github Actions deployment input and run zero-downtime deployment
  - `~/.env` - magento 2 environment variables
  - `~/.ssh/authorized_keys` - pre-configured ssh keys
 
   
+### Deployment Flow:
+- Create release time folder 202508211230 (date example)
+- Symlink shared files into new release
+- Extract new version to releases/202508211230/
+- Atomically switch current symlink to new release
+- Remove old releases (keep last 2-3)
+  
+```
+/home/USER/
+├── current -> releases/202508211230/    # Symlink to active version
+├── releases/                            # All deployed versions
+│   ├── 202508211030/                    # Previous release
+│   └── 202508211230/                    # Current release
+└── shared/                              # Persistent data
+    ├── var                              # Logs, tmp (symlink from active version)
+    └── pub/media/                       # Uploads, images (symlink from active version)
+```
+	
+### Minimal Explanation:
+-  current → Symlink pointing to the active release
+- releases/ → Contains all versioned deployments
+- shared/ → Holds persistent files across deployments
+
+This gives you zero-downtime deployments and instant rollbacks.
+
+You can use tools that help you implement the folder-based atomic deployment structure 
+(with current, releases, shared directories) on your own server. 
+  
 ## 🧰 Tools:
-you can use the following:
+[**you can use the following free included**]:
+- [Magento 2 deployment pipeline](https://github.com/magenx/Magento-2-deployment-pipeline) - Fully automated Magento 2 development and deployment pipeline with code review, composer check and pre-release => release workflow | MVP  
+  [ just create your own repository, add your magento files, copy only .github folder to your reposity, it will auto init ]
 - `sudo cacheflush` - to flush magento cache and restart php-fpm / nginx
 - `mysqltuner` - to see mysql metrics and parameters
 - `mytop` - database query monitoring / management
 - `n98-magerun2` - magento 2 extented cli
-- magento profiler built in nginx - `?developer=xxx`  <a href="https://github.com/magenx/Magento-nginx-config/blob/99b531d847fd8d3b232adcfc11e79b6bc952a6db/magento2/conf_m2/maps.conf#L24">Magento-nginx-config/magento2/conf_m2/maps.conf</a>
+- magento profiler built in nginx security header - conf_m2/maps.conf
 
+[**paid deployment tools**]:
+- deploy.py
+- deploy.sh
+- collection of scripts and server settings to enabple zero-downtime remote deployments
   
   
 ## 😻 Support the project  

@@ -12,9 +12,9 @@ return [
         'amqp' => [
             'host' => 'rabbitmq',
             'port' => '5672',
-            'user' => 'rabbitmq_'. $_ENV['OWNER'],
+            'user' => $_ENV['OWNER'],
             'password' => $_ENV['RABBITMQ_PASSWORD'],
-            'virtualhost' => '/'
+            'virtualhost' => '/'.$_ENV['OWNER']
         ],
         'consumers_wait_for_messages' => 0
     ],
@@ -72,6 +72,10 @@ return [
                 'engine' => 'innodb',
                 'initStatements' => 'SET NAMES utf8;',
                 'active' => '1',
+                'profiler' => [
+                  'class' => '\Magento\Framework\DB\Profiler',
+                  'enabled' => (bool)($_SERVER['MAGE_DB_PROFILER'] ?? false),
+                   ],
                 'driver_options' => [
                     1014 => false
                 ]
@@ -87,8 +91,8 @@ return [
     'session' => [
         'save' => 'redis',
         'redis' => [
-            'host' => 'session-'.$_ENV['OWNER'],
-            'port' => $_ENV['REDIS_SESSION_PORT'],
+            'host' => 'session',
+            'port' => '6379',
             'password' => $_ENV['REDIS_PASSWORD'],
             'timeout' => '2.5',
             'persistent_identifier' => $_ENV['OWNER'].'_sess',
@@ -96,7 +100,7 @@ return [
             'compression_threshold' => '2048',
             'compression_library' => 'lz4',
             'log_level' => '3',
-            'max_concurrency' => '6',
+            'max_concurrency' => '20',
             'break_after_frontend' => '5',
             'break_after_adminhtml' => '30',
             'first_lifetime' => '600',
@@ -120,23 +124,25 @@ return [
                 'id_prefix' => $_ENV['OWNER'].'_',
                 'backend' => 'Magento\\Framework\\Cache\\Backend\\Redis',
                 'backend_options' => [
-                    'server' => 'cache-'.$_ENV['OWNER'],
+                    'server' => 'cache',
                     'database' => '0',
                     'persistent' => $_ENV['OWNER'].'_cache',
-                    'port' => $_ENV['REDIS_CACHE_PORT'],
+                    'port' => '6380',
                     'password' => $_ENV['REDIS_PASSWORD'],
                     'compress_data' => '1',
                     'compression_lib' => 'l4z',
+                    '_useLua' => true,
+                    'use_lua' => true,
                     'preload_keys' => [
-                                        $_ENV['OWNER'].'_EAV_ENTITY_TYPES',
-                                        $_ENV['OWNER'].'_GLOBAL_PLUGIN_LIST',
-                                        $_ENV['OWNER'].'_DB_IS_UP_TO_DATE',
-                                        $_ENV['OWNER'].'_SYSTEM_DEFAULT',
-                          ]
-		]
-	]
+                      $_ENV['OWNER'].'_EAV_ENTITY_TYPES',
+                      $_ENV['OWNER'].'_GLOBAL_PLUGIN_LIST',
+                      $_ENV['OWNER'].'_DB_IS_UP_TO_DATE',
+                      $_ENV['OWNER'].'_SYSTEM_DEFAULT',
+               ]
+		   ]
+	   ]
     ],
-        'allow_parallel_generation' => false
+      'allow_parallel_generation' => false
     ],
     'lock' => [
         'provider' => 'db'
@@ -146,8 +152,8 @@ return [
     ],
     'http_cache_hosts' => [
         [
-            'host' => 'varnish',
-            'port' => '8081'
+          'host' => 'varnish',
+          'port' => '8081'
         ]
     ],
     'cache_types' => [
@@ -173,13 +179,13 @@ return [
         'default' => [
             'catalog' => [
                 'search' => [
-                    'engine' => 'elasticsearch7',
-                    'elasticsearch7_server_hostname' => 'elasticsearch',
-                    'elasticsearch7_enable_auth' => '1',
-                    'elasticsearch7_server_port' => '9200',
-                    'elasticsearch7_index_prefix' => 'indexer_'.$_ENV['OWNER'],
-                    'elasticsearch7_username' => 'indexer_'.$_ENV['OWNER'],
-                    'elasticsearch7_password' => $_ENV['INDEXER_PASSWORD']
+                    'engine' => 'opensearch',
+                    'opensearch_server_hostname' => 'opensearch',
+                    'opensearch_enable_auth' => '1',
+                    'opensearch_server_port' => '9200',
+                    'opensearch_index_prefix' => $_ENV['OWNER'],
+                    'opensearch_username' => $_ENV['OWNER'],
+                    'opensearch_password' => $_ENV['OPENSEARCH_PASSWORD']
                 ]
             ]
         ]
