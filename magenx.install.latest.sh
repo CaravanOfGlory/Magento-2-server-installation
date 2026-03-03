@@ -480,42 +480,7 @@ if [ "${ssh_test}" == "y" ]; then
   fi
 fi
 
-echo
-# Lets set magento mode/environment type to configure
-ENV=($(${SQLITE3} "SELECT DISTINCT env FROM magento;"))
-if [ ${#ENV[@]} -eq 0 ]; then
-  echo ""
-  echo ""
-  echo ""
-  YELLOWTXT "[?] Select magento environment type and mode:"
-  echo ""
-  _echo "${BOLD}production${RESET} - write disabled! production mode.
-  ${BOLD}staging${RESET} - write disabled! production mode.
-  ${BOLD}developer${RESET} - write enabled! developer mode.
-  ${BOLD}all_3${RESET} - configure all 3 environments on this server"
-  echo ""
-  updown_menu "production staging developer all_3" ENV_SELECTED
-  if [ "${ENV_SELECTED}" == "all_3" ]; then
-    ENV=("production" "staging" "developer")
-  else
-    ENV=("${ENV_SELECTED}")
-  fi
-  for ENV_SELECTED in "${ENV[@]}"
-    do
-    # magento mode? LOL
-    # if magento is running in production, staging, developer environment and has production mode, default mode, developer mode 
-    # and in the production environment it runs by default, should the default mode in production environment be the default mode?
-    # since having a default mode in between production and developer is kind of brain-crap...
-    # feels like the default mode should be staging mode to run in staging environment, or remove it completely 
-    # cause staging environment runs in production mode as well. maybe that would make some sense then. 
-    [[ "${ENV_SELECTED}" == "staging" ]] && MODE="production" || MODE="${ENV_SELECTED}"
-    ${SQLITE3} "INSERT INTO magento (env, mode) VALUES ('${ENV_SELECTED}', '${MODE}');"
-  done
-else
-  GREENTXT "ENVIRONMENT: ${ENV[@]}"
-fi
-
-# Enter domain name and ssh user per environment
+# Enter domain name and ssh user
 DOMAIN=($(${SQLITE3} "SELECT domain FROM magento;"))
 if [ "${DOMAIN}" = "" ]; then
  _space 3
